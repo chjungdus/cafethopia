@@ -179,27 +179,25 @@ html, body {
   justify-content: center;
   overflow: hidden;
   background: #0d0703;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 #ct-mob::before {
   content: '';
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(ellipse at 85% 10%, rgba(201,168,108,.13) 0%, transparent 50%),
-    radial-gradient(ellipse at 5%  90%, rgba(61,31,16,.9)     0%, transparent 45%),
-    radial-gradient(ellipse at 50% 50%, rgba(26,14,7,.5)      0%, transparent 80%);
+    radial-gradient(ellipse at 85% 10%, rgba(201,168,108,.10) 0%, transparent 50%),
+    linear-gradient(to right, rgba(13,7,3,.92) 45%, rgba(13,7,3,.7) 100%),
+    linear-gradient(to bottom, rgba(13,7,3,.6) 0%, rgba(13,7,3,.4) 100%);
   pointer-events: none;
 }
 #ct-mob::after {
-  content: '☕';
+  content: '';
   position: absolute;
-  right: -2rem;
-  bottom: -3rem;
-  font-size: 20rem;
-  opacity: .03;
-  line-height: 1;
+  inset: 0;
   pointer-events: none;
-  user-select: none;
 }
 #ct-mob.open { display: flex; }
 
@@ -1413,6 +1411,12 @@ html, body {
   });
   var mobClose = document.getElementById('ct-mob-close');
   if (mobClose) mobClose.addEventListener('click', closeMob);
+
+  // Hamburger-Menü Hintergrundbild aus vorhandenem Foto setzen
+  var mobBgSrc = (document.querySelector('.ct-about-hero img') || document.querySelector('.ct-hero img'));
+  if (mobBgSrc && mobBgSrc.src) {
+    mob.style.backgroundImage = 'url(' + mobBgSrc.src + ')';
+  }
 
   // ── ÖFFNUNGSZEITEN BADGE ──────────────────────────────────────────────────
   function updateBadge() {
