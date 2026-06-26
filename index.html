@@ -903,8 +903,8 @@ html, body {
 .ct-rev-dot { width:8px; height:8px; border-radius:50%; background:rgba(201,168,108,.3); border:none; cursor:pointer; padding:0; transition:background .22s; }
 .ct-rev-dot.act { background:var(--gold); }
 @media (max-width:900px) {
-  .ct-rev-grid { display:flex; flex-wrap:nowrap; width:100%; max-width:none; margin:0; transition:transform .42s cubic-bezier(.25,.46,.45,.94); will-change:transform; align-items:stretch; }
-  .ct-rev-grid .ct-rcard { flex:0 0 100%; min-width:100%; box-sizing:border-box; margin:0; }
+  .ct-rev-grid { display:flex; flex-wrap:nowrap; width:100%; max-width:none; margin:0; gap:0; transition:transform .42s cubic-bezier(.25,.46,.45,.94); will-change:transform; align-items:stretch; }
+  .ct-rev-grid .ct-rcard { flex:0 0 100%; min-width:100%; width:100%; box-sizing:border-box; margin:0; }
 }
 @media (min-width:901px) {
   .ct-rev-wrap { overflow:visible; }
@@ -1833,7 +1833,8 @@ html, body {
       if (byUser) { autoStopped = true; if (autoTimer) clearInterval(autoTimer); }
       curSlide = ((n % TOTAL_REV) + TOTAL_REV) % TOTAL_REV;
       if (window.innerWidth <= 900) {
-        revGrid.style.transform = 'translateX(' + (-curSlide * revWrap.offsetWidth) + 'px)';
+        var w = revWrap.getBoundingClientRect().width;
+        revGrid.style.transform = 'translateX(' + (-curSlide * w) + 'px)';
       }
       revDotBtns.forEach(function(d, i) { d.classList.toggle('act', i === curSlide); });
     }
@@ -1866,7 +1867,10 @@ html, body {
 
     window.addEventListener('resize', function() {
       if (window.innerWidth > 900) revGrid.style.transform = '';
-      else revGrid.style.transform = 'translateX(' + (-curSlide * revWrap.offsetWidth) + 'px)';
+      else {
+        var w = revWrap.getBoundingClientRect().width;
+        revGrid.style.transform = 'translateX(' + (-curSlide * w) + 'px)';
+      }
     }, { passive: true });
   }
 
