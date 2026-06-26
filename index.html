@@ -1831,8 +1831,12 @@ html, body {
     var autoTimer = null;
     var autoStopped = false;
 
-    function goSlide(n, byUser) {
-      if (byUser) { autoStopped = true; if (autoTimer) clearInterval(autoTimer); }
+    function stopAuto() {
+      autoStopped = true;
+      if (autoTimer) { clearInterval(autoTimer); autoTimer = null; }
+    }
+
+    function goSlide(n) {
       curSlide = ((n % TOTAL_REV) + TOTAL_REV) % TOTAL_REV;
       if (window.innerWidth <= 900) {
         revWrap.scrollTo({ left: curSlide * window.innerWidth, behavior: 'smooth' });
@@ -1841,32 +1845,30 @@ html, body {
     }
 
     revDotBtns.forEach(function(dot, i) {
-      dot.addEventListener('click', function() { goSlide(i, true); });
+      dot.addEventListener('click', function() { stopAuto(); goSlide(i); });
     });
 
-    function startAuto() {
-      if (autoTimer) clearInterval(autoTimer);
-      autoTimer = setInterval(function() {
-        if (!autoStopped && window.innerWidth <= 900) goSlide(curSlide + 1, false);
-      }, 2000);
-    }
-    startAuto();
+    // Stop auto permanently on ANY user touch
+    revWrap.addEventListener('touchstart', function() { stopAuto(); }, { passive: true });
 
-    // Detect manual swipe via scroll position (scroll-snap handles native swipe)
+    // Update dots as user swipes (scroll-snap handles native drag preview)
     var scrollTimeout = null;
     revWrap.addEventListener('scroll', function() {
       if (window.innerWidth > 900) return;
       if (scrollTimeout) clearTimeout(scrollTimeout);
       scrollTimeout = setTimeout(function() {
         var slide = Math.round(revWrap.scrollLeft / window.innerWidth);
-        if (slide >= 0 && slide < TOTAL_REV && slide !== curSlide) {
+        if (slide >= 0 && slide < TOTAL_REV) {
           curSlide = slide;
-          autoStopped = true;
-          if (autoTimer) clearInterval(autoTimer);
           revDotBtns.forEach(function(d, i) { d.classList.toggle('act', i === curSlide); });
         }
       }, 80);
     }, { passive: true });
+
+    // Auto-advance every 2s; stops permanently on first touch
+    autoTimer = setInterval(function() {
+      if (!autoStopped && window.innerWidth <= 900) goSlide(curSlide + 1);
+    }, 2000);
   }
 
   // ── 10: MENU CATEGORY TABS ───────────────────────────────────────────────
