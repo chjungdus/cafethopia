@@ -903,11 +903,14 @@ html, body {
 .ct-rev-dot { width:8px; height:8px; border-radius:50%; background:rgba(201,168,108,.3); border:none; cursor:pointer; padding:0; transition:background .22s; }
 .ct-rev-dot.act { background:var(--gold); }
 @media (max-width:900px) {
-  .ct-rev-grid { display:flex; flex-wrap:nowrap; width:100%; max-width:none; margin:0; gap:0; transition:transform .42s cubic-bezier(.25,.46,.45,.94); will-change:transform; align-items:stretch; }
-  .ct-rev-grid .ct-rcard { flex:0 0 100%; min-width:100%; width:100%; box-sizing:border-box; margin:0; }
+  /* Bleed wrap outside .ct-rev padding so cards fill full viewport width */
+  .ct-rev-wrap { margin-left:-2rem; margin-right:-2rem; overflow-x:scroll; scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch; scrollbar-width:none; }
+  .ct-rev-wrap::-webkit-scrollbar { display:none; }
+  .ct-rev-grid { display:flex; flex-wrap:nowrap; gap:0; max-width:none; margin:0; }
+  .ct-rev-grid .ct-rcard { flex:0 0 100vw; width:100vw; box-sizing:border-box; margin:0; scroll-snap-align:start; }
+  .ct-rev-dots { padding:0 2rem; }
 }
 @media (min-width:901px) {
-  .ct-rev-wrap { overflow:visible; }
   .ct-rev-dots { display:none; }
 }
 
@@ -1819,12 +1822,11 @@ html, body {
     setTimeout(typeStep, 1500);
   }
 
-  // ── 8: REVIEW CAROUSEL ───────────────────────────────────────────────────
+  // ── 8: REVIEW CAROUSEL (scroll-snap) ────────────────────────────────────
   var revWrap = document.querySelector('.ct-rev-wrap');
-  var revGrid = document.querySelector('.ct-rev-grid');
   var revDotBtns = document.querySelectorAll('.ct-rev-dot');
   var TOTAL_REV = revDotBtns.length;
-  if (revWrap && revGrid && TOTAL_REV) {
+  if (revWrap && TOTAL_REV) {
     var curSlide = 0;
     var autoTimer = null;
     var autoStopped = false;
@@ -1833,8 +1835,7 @@ html, body {
       if (byUser) { autoStopped = true; if (autoTimer) clearInterval(autoTimer); }
       curSlide = ((n % TOTAL_REV) + TOTAL_REV) % TOTAL_REV;
       if (window.innerWidth <= 900) {
-        var w = revWrap.getBoundingClientRect().width;
-        revGrid.style.transform = 'translateX(' + (-curSlide * w) + 'px)';
+        revWrap.scrollTo({ left: curSlide * window.innerWidth, behavior: 'smooth' });
       }
       revDotBtns.forEach(function(d, i) { d.classList.toggle('act', i === curSlide); });
     }
@@ -1851,26 +1852,20 @@ html, body {
     }
     startAuto();
 
-    // Swipe support
-    var txStart = 0, tyStart = 0;
-    revWrap.addEventListener('touchstart', function(e) {
-      txStart = e.touches[0].clientX;
-      tyStart = e.touches[0].clientY;
-    }, { passive: true });
-    revWrap.addEventListener('touchend', function(e) {
-      var dx = e.changedTouches[0].clientX - txStart;
-      var dy = e.changedTouches[0].clientY - tyStart;
-      if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 38) {
-        goSlide(dx < 0 ? curSlide + 1 : curSlide - 1, true);
-      }
-    }, { passive: true });
-
-    window.addEventListener('resize', function() {
-      if (window.innerWidth > 900) revGrid.style.transform = '';
-      else {
-        var w = revWrap.getBoundingClientRect().width;
-        revGrid.style.transform = 'translateX(' + (-curSlide * w) + 'px)';
-      }
+    // Detect manual swipe via scroll position (scroll-snap handles native swipe)
+    var scrollTimeout = null;
+    revWrap.addEventListener('scroll', function() {
+      if (window.innerWidth > 900) return;
+      if (scrollTimeout) clearTimeout(scrollTimeout);
+      scrollTimeout = setTimeout(function() {
+        var slide = Math.round(revWrap.scrollLeft / window.innerWidth);
+        if (slide >= 0 && slide < TOTAL_REV && slide !== curSlide) {
+          curSlide = slide;
+          autoStopped = true;
+          if (autoTimer) clearInterval(autoTimer);
+          revDotBtns.forEach(function(d, i) { d.classList.toggle('act', i === curSlide); });
+        }
+      }, 80);
     }, { passive: true });
   }
 
